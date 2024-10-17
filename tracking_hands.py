@@ -71,7 +71,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.8) a
 
                 json_data = json.dumps(landmarks_data)
                 #json_data = json.dumps(rotation_data)
-                print(json_data)
+                #print(json_data)
 
                 sock.sendto(json_data.encode('utf-8'), (UDP_IP, UDP_PORT))
 

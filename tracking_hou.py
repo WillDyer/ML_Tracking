@@ -26,8 +26,8 @@ show_hands = 1
 show_video_sources = True
 webcam = False
 
-video_source_1 = "/run/media/will/Will_s SSD1/University_Projects/YR3/ML_Tracking/clips/walk_cycle.mp4"
-video_source_2 = ""
+video_source_1 = "/home/will/Documents/walk_cycle_1.mp4"
+video_source_2 = "/home/will/Documents/walk_cycle_2.mp4"
 
 if webcam is False:
     video_source_1 = video_source_1
@@ -42,7 +42,7 @@ if not capture_2.isOpened():
     print("ERROR: could not open camera.")
     exit()
 
-def get_landmark_data(frame, pose_detector, hand_detector):
+def get_landmark_data(frame, pose_detector, hands_detector):
     frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
     frame.flags.writeable = False
     pose_results = pose_detector.process(frame)
@@ -107,7 +107,7 @@ def average_landmarks(landmarks_1, landmarks_2):
         }
 
     if landmarks_1["pose_landmarks"] and landmarks_2["pose_landmarks"]:
-        for pose_1, pose_2 in zip(landmarks_1["pose_landmakrs"], landmarks_2["pose_landmarks"]):
+        for pose_1, pose_2 in zip(landmarks_1["pose_landmarks"], landmarks_2["pose_landmarks"]):
             average = {
                 "x": (pose_1["x"] + pose_2["x"]) / 2,
                 "y": (pose_1["y"] + pose_2["y"]) / 2,
@@ -149,6 +149,8 @@ with mp_pose.Pose() as pose_detector, mp_hands.Hands(min_detection_confidence=0.
             "pose_landmarks": averaged_landmarks["pose_landmarks"],
             "hand_landmarks": averaged_landmarks["hand_landmarks"]
         }
+
+        print(all_landmarks_data)
 
         json_data = json.dumps(all_landmarks_data)
         sock.sendto(json_data.encode('utf-8'), (UDP_IP, UDP_PORT))

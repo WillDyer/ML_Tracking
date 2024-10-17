@@ -1,5 +1,8 @@
 import cv2
 import mediapipe as mp
+import socket
+import struct
+import json
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face = mp.solutions.face_mesh
@@ -19,7 +22,12 @@ if not cap.isOpened():
     print("ERROR: could not open camera.")
     exit()
 
-with mp_face.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh:
+
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5005
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+with mp_face.FaceMesh(min_detection_confidence=0.8, min_tracking_confidence=0.8) as face_mesh:
     while cap.isOpened():
         success, image = cap.read()
         if not success:
@@ -43,6 +51,24 @@ with mp_face.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
                     landmark_drawing_spec=drawing_spec,
                     connection_drawing_spec=drawing_spec
                 )
+
+                landmarks_data = {
+                    "landmarks": []
+                }
+
+                # Collect the face landmarks (468 points per face)
+                for landmark in face_landmarks.landmark:  # Correct this line
+                    landmarks_data["landmarks"].append({
+                        "x": landmark.x,
+                        "y": landmark.y,
+                        "z": landmark.z
+                    })
+
+            json_data = json.dumps(landmarks_data)
+
+            sock.sendto(json_data.encode('utf-8'), (UDP_IP, UDP_PORT))
+
+
 
         cv2.imshow("Face Masking", image)
 
