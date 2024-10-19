@@ -31,7 +31,7 @@ if not cap.isOpened():
     print("ERROR: could not open camera.")
     exit()
 
-with mp_pose.Pose() as pose_detector:
+with mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.8) as pose_detector:
     while cap.isOpened():
         success, frame = cap.read()
         if not success:
