@@ -31,7 +31,10 @@ if not cap.isOpened():
     print("ERROR: could not open camera.")
     exit()
 
-with mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.8) as pose_detector:
+cv2.namedWindow("Pose Detection", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Pose Detection", 800, 600)
+
+with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.8) as pose_detector:
     while cap.isOpened():
         success, frame = cap.read()
         if not success:
@@ -52,18 +55,6 @@ with mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.8) as 
             }
 
         if pose_results.pose_landmarks:
-            for index, landmark in enumerate(pose_results.pose_landmarks.landmark):
-                if index not in EXCLUDED_LANDMARKS:
-                    landmarks_data["landmarks"].append({
-                        "x": landmark.x,
-                        "y": landmark.y,
-                        "z": landmark.z,
-                        "visibility": landmark.visibility
-                    })
-
-                    cx, cy = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
-                    cv2.circle(frame, (cx, cy), 3, (128, 0, 255), thickness=5)
-
             for connection in CUSTOM_POSE_CONNECTIONS:
                 start_idx, end_idx = connection
                 start_landmark = pose_results.pose_landmarks.landmark[start_idx]
@@ -73,6 +64,18 @@ with mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.8) as 
                 end_cx, end_cy = int(end_landmark.x * frame.shape[1]), int(end_landmark.y * frame.shape[0])
 
                 cv2.line(frame, (start_cx, start_cy), (end_cx, end_cy), (99, 255, 107), 2)
+
+            for index, landmark in enumerate(pose_results.pose_landmarks.landmark):
+                if index not in EXCLUDED_LANDMARKS:
+                    landmarks_data["landmarks"].append({
+                        "x": landmark.x,
+                        "y": landmark.y,
+                        "z": landmark.z * 0.25,
+                        "visibility": landmark.visibility
+                    })
+
+                    cx, cy = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
+                    cv2.circle(frame, (cx, cy), 3, (128, 0, 255), thickness=5)
 
             json_data = json.dumps(landmarks_data)
             sock.sendto(json_data.encode('utf-8'), (UDP_IP, UDP_PORT))
